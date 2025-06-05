@@ -1,4 +1,4 @@
-# Tugas9_Kelompok6_PPL
+# Tugas8_Kelompok6_PPL
 # Manajemen Produk Django - Dokumentasi
 
 ## 📋 Deskripsi Proyek
