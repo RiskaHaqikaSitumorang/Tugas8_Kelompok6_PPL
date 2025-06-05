@@ -1,0 +1,266 @@
+{% extends 'produk/base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0">
+                    <i class="fas fa-boxes me-2"></i>Daftar Produk
+                </h3>
+            </div>
+        </div>
+        
+        <div class="card-body">
+            <!-- Search and Filter Section -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Cari produk..." id="searchInput">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="filterKategori">
+                        <option selected>Semua Kategori</option>
+                        <option>Elektronik</option>
+                        <option>Fashion</option>
+                        <option>Makanan</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="filterStok">
+                        <option selected>Status Stok</option>
+                        <option>Tersedia</option>
+                        <option>Habis</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Products Table -->
+            {% if produk_list %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle" id="produkTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th width="120px">Gambar</th>
+                            <th>Nama Produk</th>
+                            <th width="150px">Harga</th>
+                            <th width="120px">Stok</th>
+                            <th width="150px">Terakhir Diupdate</th>
+                            <th width="130px">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for produk in produk_list %}
+                        <tr>
+                            <td>
+                                {% if produk.gambar %}
+                                <img src="{{ produk.gambar.url }}" class="img-thumbnail product-img" alt="{{ produk.nama }}">
+                                {% else %}
+                                <div class="no-image-placeholder">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <h6 class="mb-1">{{ produk.nama }}</h6>
+                                <p class="text-muted small mb-0">
+                                    {{ produk.deskripsi|truncatechars:60|default:"-" }}
+                                </p>
+                            </td>
+                            <td class="fw-bold text-primary">Rp{{ produk.harga|floatformat:0 }}</td>
+                            <td>
+                                <span class="badge rounded-pill bg-{% if produk.stok > 0 %}success{% else %}danger{% endif %}">
+                                    {{ produk.stok }} Unit
+                                </span>
+                            </td>
+                            <td class="small text-muted">
+                                {{ produk.diperbarui_pada|date:"d M Y H:i" }}
+                            </td>
+                            <td>
+                                <div class="d-flex gap-2">
+                                    <a href="{% url 'produk:edit_produk' produk.id %}" class="btn btn-sm btn-outline-primary" 
+                                       data-bs-toggle="tooltip" title="Edit">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                    <!-- Delete Form -->
+                                            <form method="POST" action="{% url 'produk:hapus_produk' produk.id %}" class="delete-form" id="delete-form-{{ produk.id }}">
+                                                {% csrf_token %}
+                                                <button type="button" class="btn btn-sm btn-outline-danger delete-btn" 
+                                                        data-produk-id="{{ produk.id }}"
+                                                        data-produk-nama="{{ produk.nama }}">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+<!-- Detail Produk Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="detailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="detailModalLabel">
+                    <i class="fas fa-info-circle me-2"></i>Detail Produk
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="detailModalBody">
+                <!-- Content will be loaded here via AJAX -->
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+            <!-- Pagination -->
+            {% if is_paginated %}
+            <nav aria-label="Page navigation" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1" aria-label="First">
+                            <span aria-hidden="true">&laquo;&laquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+                            <span aria-hidden="true">&laquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                        <li class="page-item active"><a class="page-link" href="#">{{ num }}</a></li>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+                            <span aria-hidden="true">&raquo;</span>
+                        </a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
+                            <span aria-hidden="true">&raquo;&raquo;</span>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5 my-5">
+                <i class="fas fa-box-open fa-4x text-muted mb-4"></i>
+                <h4 class="text-muted">Belum ada produk</h4>
+                <p class="text-muted">Mulai dengan menambahkan produk pertama Anda</p>
+                <a href="{% url 'produk:tambah_produk' %}" class="btn btn-primary px-4">
+                    <i class="fas fa-plus-circle me-2"></i>Tambah Produk
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+    .product-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+    
+    .no-image-placeholder {
+        width: 80px;
+        height: 80px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #adb5bd;
+        font-size: 1.5rem;
+    }
+    
+    .delete-form {
+        display: inline-block;
+    }
+    
+    .table th {
+        white-space: nowrap;
+    }
+    
+    .card {
+        border-radius: 12px;
+        border: none;
+    }
+    
+    .card-header {
+        border-radius: 12px 12px 0 0 !important;
+    }
+</style>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();  // mencegah submit default
+            const productId = this.getAttribute('data-produk-id');
+            const productName = this.getAttribute('data-produk-nama');
+            const deleteForm = document.getElementById(`delete-form-${productId}`);
+
+            Swal.fire({
+                title: 'Yakin Hapus?',
+                text: `Produk "${productName}" akan dihapus.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    deleteForm.submit();  // submit form jika dikonfirmasi
+                }
+            });
+        });
+    });
+});
+
+
+    
+    // Simple search functionality
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            const filter = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#produkTable tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(filter) ? '' : 'none';
+            });
+        });
+    }
+;
+</script>
+{% endblock %}
