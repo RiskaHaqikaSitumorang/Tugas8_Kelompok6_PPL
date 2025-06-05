@@ -22,7 +22,7 @@ Sistem manajemen produk berbasis web dengan fitur CRUD (Create, Read, Update, De
 
 ### 1. Clone Repository
 ```bash
-git clone https://github.com/RiskaHaqikaSitumorang/Tugas9_Kelompok6_PPL.git
+git clone https://github.com/RiskaHaqikaSitumorang/Tugas8_Kelompok6_PPL.git
 cd repo-manajemen-produk
 ```
 
