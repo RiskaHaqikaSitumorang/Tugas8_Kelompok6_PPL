@@ -2,7 +2,7 @@
 # Manajemen Produk Django - Dokumentasi
 
 ## 📋 Deskripsi Proyek
-
+Sistem manajemen produk berbasis web dengan fitur CRUD (Create, Read, Update, Delete) menggunakan Django.
 
 ## ✨ Fitur Utama
 - ✅ Tambah produk baru dengan gambar
